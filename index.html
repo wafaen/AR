@@ -2,65 +2,131 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kivicube-style Static WebAR Video Builder</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Image Target Video AR Builder</title>
+  <style>
+    :root{font-family:Arial,Helvetica,sans-serif;color:#111;background:#f6f6f6}body{margin:0}main{max-width:920px;margin:auto;padding:24px}.card{background:#fff;border-radius:18px;padding:22px;margin:16px 0;box-shadow:0 10px 30px #0001}h1{margin:0 0 6px;font-size:30px}h2{margin-top:0}.muted{color:#666}.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:750px){.row{grid-template-columns:1fr}}label{display:block;font-weight:700;margin:14px 0 6px}input,button,textarea{font:inherit}input[type=text],input[type=url],input[type=number],textarea{width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:12px;padding:12px;background:#fff}button,a.btn{display:inline-block;border:0;border-radius:999px;background:#111;color:white;padding:12px 18px;margin:8px 8px 8px 0;text-decoration:none;cursor:pointer}button.secondary,a.secondary{background:#eee;color:#111}.danger{color:#b00020}.ok{color:#056b2f}.small{font-size:13px}.preview{max-width:280px;border-radius:12px;border:1px solid #ddd;display:block;margin-top:10px}.code{background:#111;color:#eee;border-radius:14px;padding:14px;word-break:break-all;white-space:pre-wrap}.steps li{margin:8px 0}.pill{background:#eee;border-radius:999px;padding:4px 9px;font-size:12px}.progress{height:12px;background:#eee;border-radius:999px;overflow:hidden}.bar{height:100%;width:0;background:#111;transition:.25s}</style>
 </head>
 <body>
-  <main class="wrap">
-    <section class="hero">
-      <p class="eyebrow">Static WebAR · Image target video overlay</p>
-      <h1>AR poster video builder</h1>
-      <p class="lead">Paste a compiled MindAR image target and a direct MP4 URL. The viewer places the video exactly over the scanned image frame, with autoplay, mute, loop, and pause when the image is lost.</p>
-      <div class="notice">This is fully static: upload these files to GitHub Pages/Netlify. Your <code>.mind</code> and <code>.mp4</code> links must be direct HTTPS links with CORS allowed.</div>
-    </section>
+<main>
+  <h1>Image Target → Looping Video AR</h1>
+  <p class="muted">Static Kivicube-style workflow: compile your poster/image target, paste the hosted target + video links, then generate the AR viewer link.</p>
 
-    <section class="card">
-      <label>Compiled image target URL <span>.mind</span></label>
-      <input id="targetUrl" placeholder="https://.../targets.mind" />
-      <p class="hint">Your poster/image must first be compiled using the MindAR Image Target Compiler.</p>
+  <section class="card">
+    <h2>1) Compile your target image</h2>
+    <p class="muted">Upload the exact image people will scan. The app will create a <b>.mind</b> file. This is required for image tracking.</p>
+    <input id="targetFile" type="file" accept="image/png,image/jpeg,image/webp" />
+    <img id="targetPreview" class="preview" hidden />
+    <div style="margin-top:14px" class="progress"><div id="bar" class="bar"></div></div>
+    <p id="compileStatus" class="small muted">Waiting for image…</p>
+    <button id="compileBtn">Compile .mind target</button>
+    <a id="downloadMind" class="btn secondary" hidden download="target.mind">Download target.mind</a>
+    <p class="small"><b>Important:</b> after download, upload <code>target.mind</code> somewhere public with HTTPS, then paste its direct URL below.</p>
+  </section>
 
-      <label>Video URL <span>direct .mp4 link</span></label>
-      <input id="videoUrl" placeholder="https://.../video.mp4" />
-
-      <div class="grid">
-        <div>
-          <label>Target image width</label>
-          <input id="targetW" type="number" min="1" step="1" value="1080" />
-        </div>
-        <div>
-          <label>Target image height</label>
-          <input id="targetH" type="number" min="1" step="1" value="1080" />
-        </div>
-        <div>
-          <label>Scale</label>
-          <input id="scale" type="number" min="0.1" step="0.01" value="1" />
-        </div>
+  <section class="card">
+    <h2>2) Build your AR link</h2>
+    <div class="row">
+      <div>
+        <label>.mind target direct URL</label>
+        <input id="mindUrl" type="url" placeholder="https://.../target.mind" />
       </div>
-
-      <div class="grid two">
-        <label class="check"><input id="muted" type="checkbox" checked /> Muted autoplay</label>
-        <label class="check"><input id="pauseLost" type="checkbox" checked /> Pause when target is lost</label>
+      <div>
+        <label>Video direct URL</label>
+        <input id="videoUrl" type="url" placeholder="https://.../video.mp4" />
       </div>
-
-      <button id="makeLink">Create AR viewer link</button>
-      <textarea id="result" readonly placeholder="Your Kivicube-style AR link appears here"></textarea>
-      <div class="actions">
-        <a id="openLink" class="button ghost" href="#" target="_blank" rel="noopener">Open viewer</a>
-        <button id="copyLink" class="ghost">Copy link</button>
+    </div>
+    <div class="row">
+      <div>
+        <label>Target aspect ratio</label>
+        <input id="ratio" type="number" value="1.414" step="0.001" />
+        <p class="small muted">Height ÷ width. A3 portrait is 1.414. Square is 1. Video will cover this full frame.</p>
       </div>
-    </section>
+      <div>
+        <label>Video opacity</label>
+        <input id="opacity" type="number" value="1" min="0" max="1" step="0.05" />
+      </div>
+    </div>
+    <button id="makeLink">Generate viewer link</button>
+    <button id="openViewer" class="secondary">Open locally</button>
+    <p class="small muted">For GitHub Pages, this creates a link to <code>viewer.html</code> with your URLs inside the query string.</p>
+    <div id="linkBox" class="code" hidden></div>
+  </section>
 
-    <section class="card small">
-      <h2>How it works</h2>
-      <ol>
-        <li>Use your poster/image as the image target.</li>
-        <li>Compile it to <code>targets.mind</code>.</li>
-        <li>Host <code>targets.mind</code> and the video online.</li>
-        <li>Generate the link and put that link behind your QR code.</li>
-      </ol>
-    </section>
-  </main>
-  <script src="builder.js"></script>
+  <section class="card">
+    <h2>How to use it like Kivicube</h2>
+    <ol class="steps">
+      <li>Upload the poster/image target here and compile it.</li>
+      <li>Download <span class="pill">target.mind</span>.</li>
+      <li>Upload <span class="pill">target.mind</span> and your <span class="pill">video.mp4</span> to a public HTTPS host.</li>
+      <li>Paste both direct URLs above.</li>
+      <li>Open the generated viewer link on your phone and scan the original image.</li>
+    </ol>
+    <p class="danger small">Google Drive/Mega links often fail because they are not true direct/CORS-friendly links.</p>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+<script>
+const $ = (id)=>document.getElementById(id);
+let selectedImage = null;
+$('targetFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  $('targetPreview').src = url; $('targetPreview').hidden = false;
+  const img = new Image();
+  img.onload = ()=>{
+    selectedImage = img;
+    $('ratio').value = (img.naturalHeight / img.naturalWidth).toFixed(3);
+    $('compileStatus').textContent = `Ready: ${img.naturalWidth} × ${img.naturalHeight}. Ratio detected.`;
+  };
+  img.src = url;
+});
+$('compileBtn').addEventListener('click', async ()=>{
+  if(!selectedImage){ alert('Upload a target image first.'); return; }
+  $('compileStatus').textContent = 'Compiling… this can take a bit for large images.';
+  $('bar').style.width = '5%';
+  try{
+    const compiler = new MINDAR.IMAGE.Compiler();
+    await compiler.compileImageTargets([selectedImage], (progress)=>{
+      $('bar').style.width = Math.round(progress*100)+'%';
+      $('compileStatus').textContent = 'Compiling… '+Math.round(progress*100)+'%';
+    });
+    const buffer = await compiler.exportData();
+    const blob = new Blob([buffer], {type:'application/octet-stream'});
+    const url = URL.createObjectURL(blob);
+    $('downloadMind').href = url;
+    $('downloadMind').hidden = false;
+    $('compileStatus').innerHTML = '<span class="ok">Done. Download target.mind now.</span>';
+    $('bar').style.width = '100%';
+  }catch(err){
+    console.error(err);
+    $('compileStatus').innerHTML = '<span class="danger">Compilation failed. Try a smaller JPG/PNG target image.</span>';
+  }
+});
+function generatedUrl(){
+  const mind = $('mindUrl').value.trim();
+  const video = $('videoUrl').value.trim();
+  const ratio = $('ratio').value.trim() || '1';
+  const opacity = $('opacity').value.trim() || '1';
+  const base = new URL('viewer.html', location.href).href;
+  const u = new URL(base);
+  u.searchParams.set('target', mind);
+  u.searchParams.set('video', video);
+  u.searchParams.set('ratio', ratio);
+  u.searchParams.set('opacity', opacity);
+  return u.href;
+}
+$('makeLink').addEventListener('click', ()=>{
+  if(!$('mindUrl').value.trim() || !$('videoUrl').value.trim()) { alert('Paste both URLs first.'); return; }
+  const u = generatedUrl();
+  $('linkBox').textContent = u;
+  $('linkBox').hidden = false;
+});
+$('openViewer').addEventListener('click', ()=>{
+  if(!$('mindUrl').value.trim() || !$('videoUrl').value.trim()) { alert('Paste both URLs first.'); return; }
+  window.open(generatedUrl(), '_blank');
+});
+</script>
 </body>
 </html>

@@ -1,39 +1,41 @@
-# Kivicube-style Static WebAR Video Overlay
+# Kivicube-style Image Target Video AR
 
-A no-server WebAR app for the classic AR poster workflow:
+Static WebAR app: no backend. It does one thing:
 
-- scan an image target
-- display an MP4 video exactly on top of the scanned image frame
-- autoplay + loop
-- pause when the image is lost
-- hosted as plain static files on GitHub Pages, Netlify, etc.
+**Scan an image target → display a looping autoplay video exactly on the image frame.**
 
 ## Files
 
-- `index.html` — builder page
-- `viewer.html` — AR viewer page
-- `builder.js` — creates viewer links
-- `viewer.js` — MindAR/A-Frame video overlay logic
-- `style.css` — UI styles
+- `index.html` — builder + target compiler
+- `viewer.html` — mobile AR viewer
 
 ## Workflow
 
-1. Prepare your poster/image target.
-2. Compile it into a `.mind` file using the MindAR Image Target Compiler.
-3. Host the `.mind` file and your `.mp4` video online.
-4. Open `index.html`, paste both direct URLs, and generate the viewer link.
-5. Put the viewer link behind a QR code.
+1. Open `index.html`.
+2. Upload the exact poster/image people will scan.
+3. Compile and download `target.mind`.
+4. Upload `target.mind` and your `video.mp4` to a public HTTPS host.
+5. Paste both direct URLs in the builder.
+6. Generate the viewer link.
+7. Open the viewer link on mobile and scan the image.
 
-## Important hosting rules
+## Important
 
-Your files must be loaded from:
+The target image must be converted into `.mind` format first. A normal JPG/PNG URL is not enough for MindAR image tracking.
 
-- HTTPS URLs
-- direct file links, not preview pages
-- hosts that allow CORS
+## Video settings
 
-For the video, use MP4/H.264 for the best mobile compatibility.
+Use MP4 H.264 if possible.
+The viewer sets the video to:
 
-## Notes
+- autoplay after tap/start
+- loop
+- muted
+- playsinline
 
-Mobile browsers usually require one user tap before video playback. This app uses a Start AR button to satisfy that rule, then the video plays automatically when the target is detected.
+Mobile browsers require the first tap before camera/video playback.
+
+## Hosting
+
+GitHub Pages works for the app.
+For assets, use direct HTTPS links that allow CORS. GitHub Releases direct download links usually work better than Google Drive/Mega.
