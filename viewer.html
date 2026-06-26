@@ -2,55 +2,115 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>Image Video AR Viewer</title>
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <style>
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:system-ui,Arial,sans-serif}.overlay{position:fixed;z-index:10;left:0;right:0;bottom:0;padding:14px;background:linear-gradient(transparent,#000b);color:white;text-align:center}.btn{border:0;border-radius:999px;background:white;color:#111;font-weight:800;padding:12px 18px}.hidden{display:none}.error{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:white;background:#111;padding:20px;text-align:center;z-index:20;line-height:1.5}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:system-ui,Arial,sans-serif;color:#fff}#container{position:fixed;inset:0;overflow:hidden;background:#000}#ui{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:18px;background:linear-gradient(180deg,#000c,#0008)}.panel{max-width:520px;width:100%;background:#151515;border:1px solid #333;border-radius:18px;padding:18px;box-shadow:0 18px 50px #000b}.panel h1{font-size:22px;margin:0 0 8px}.panel p{line-height:1.45;color:#cfcfcf}button{appearance:none;border:0;border-radius:14px;padding:14px 18px;font-weight:900;background:#fff;color:#111;font-size:16px;width:100%;cursor:pointer}.small{font-size:13px;color:#aaa;word-break:break-word}.error{color:#ffb1b1;white-space:pre-wrap}.hud{position:fixed;left:10px;right:10px;bottom:10px;z-index:9;background:#0009;border:1px solid #333;border-radius:12px;padding:9px;font-size:13px;color:#ddd;pointer-events:none}#video{display:none}
   </style>
+  <script type="importmap">
+  {"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","mindar-image-three":"https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"}}
+  </script>
 </head>
 <body>
-<div id="error" class="error hidden"></div>
-<div id="tap" class="overlay hidden"><button class="btn">Tap to start video</button><div style="font-size:13px;margin-top:8px">Some phones block autoplay unless muted.</div></div>
-<a-scene id="scene" embedded color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: true">
-  <a-assets timeout="30000"><video id="arVideo" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></video></a-assets>
-  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-  <a-entity id="anchor" mindar-image-target="targetIndex: 0">
-    <a-video id="videoPlane" src="#arVideo" position="0 0 0" rotation="0 0 0"></a-video>
-  </a-entity>
-</a-scene>
-<script>
-const p = new URLSearchParams(location.search);
-const target = p.get('target');
-const videoUrl = p.get('video');
-const width = Number(p.get('w') || 1);
-const height = Number(p.get('h') || 0.5625);
-const autoplay = p.get('autoplay') !== '0';
-const loop = p.get('loop') !== '0';
-const muted = p.get('muted') !== '0';
-const controls = p.get('controls') === '1';
-const fit = p.get('fit') || 'cover';
-const start = p.get('start') || 'target';
-const err = document.getElementById('error');
-function showError(msg){err.textContent=msg;err.classList.remove('hidden');}
-if(!target || !videoUrl){ showError('Missing target.mind or video URL. Generate the link from index.html first.'); }
-else{
-  const scene = document.getElementById('scene');
-  scene.setAttribute('mindar-image', `imageTargetSrc: ${target}; autoStart: true; uiScanning: yes; uiLoading: yes;`);
-  const v = document.getElementById('arVideo');
-  v.src = videoUrl; v.loop = loop; v.muted = muted; v.controls = controls; v.autoplay = autoplay; v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
-  const plane = document.getElementById('videoPlane');
-  plane.setAttribute('width', width); plane.setAttribute('height', height); plane.setAttribute('material', `shader: flat; transparent: true; side: double; ${fit==='contain'?'':'}`);
-  // A-Frame video fills the plane. For exact Kivicube-style matching, export the video in the same aspect ratio as the target image.
-  async function tryPlay(){ if(!autoplay) return; try{ await v.play(); document.getElementById('tap').classList.add('hidden'); }catch(e){ document.getElementById('tap').classList.remove('hidden'); } }
-  document.getElementById('tap').onclick=()=>tryPlay();
-  document.body.addEventListener('click',()=>tryPlay(),{once:true});
-  const anchor = document.getElementById('anchor');
-  anchor.addEventListener('targetFound', ()=>{ if(start==='target') { v.currentTime = 0; tryPlay(); } });
-  anchor.addEventListener('targetLost', ()=>{ if(start==='target') v.pause(); });
-  if(start==='load') window.addEventListener('load', tryPlay);
-}
+  <video id="video" playsinline webkit-playsinline crossorigin="anonymous"></video>
+  <div id="container"></div>
+  <div id="ui"><div class="panel"><h1>Image Video AR</h1><p>Tap start, allow camera, then scan the target image. The video will appear on the image and loop.</p><button id="startBtn">Start camera</button><p id="msg" class="small"></p></div></div>
+  <div id="hud" class="hud">Waiting…</div>
+
+<script type="module">
+  import * as THREE from 'three';
+  import { MindARThree } from 'mindar-image-three';
+
+  const qs = new URLSearchParams(location.search);
+  const target = qs.get('target');
+  const videoSrc = qs.get('video');
+  const aspect = Math.max(0.1, Math.min(10, parseFloat(qs.get('aspect') || '1')));
+  const opt = (name, def='1') => (qs.get(name) ?? def) === '1';
+  const autoplay = opt('autoplay');
+  const loop = opt('loop');
+  const muted = opt('muted');
+  const hideLost = opt('hideLost');
+  const ui = document.getElementById('ui');
+  const msg = document.getElementById('msg');
+  const hud = document.getElementById('hud');
+  const video = document.getElementById('video');
+  let started = false;
+
+  function say(t, bad=false){ hud.textContent = t; msg.textContent = t; msg.className = bad ? 'small error':'small'; }
+
+  async function checkUrl(url, label){
+    if(!url) throw new Error(label + ' URL is missing.');
+    if(!/^https:\/\//i.test(url) && !url.startsWith(location.origin)) throw new Error(label + ' must be HTTPS.');
+    try{
+      const r = await fetch(url, {method:'GET', mode:'cors', cache:'no-store'});
+      if(!r.ok) throw new Error(`${label} returned HTTP ${r.status}.`);
+    }catch(e){
+      throw new Error(`${label} cannot be loaded. It must be a direct public URL with CORS enabled.\n${e.message}`);
+    }
+  }
+
+  async function start(){
+    if(started) return;
+    started = true;
+    try{
+      say('Checking files…');
+      await checkUrl(target, '.mind target');
+      // Some video hosts block fetch but still allow video tag. So do not hard-fail video by fetch.
+      if(!videoSrc) throw new Error('Video URL is missing.');
+      if(!/^https:\/\//i.test(videoSrc) && !videoSrc.startsWith(location.origin)) throw new Error('Video must be HTTPS.');
+
+      video.src = videoSrc;
+      video.loop = loop;
+      video.muted = muted;
+      video.playsInline = true;
+      video.setAttribute('playsinline','');
+      video.setAttribute('webkit-playsinline','');
+      video.crossOrigin = 'anonymous';
+      video.load();
+
+      say('Starting camera…');
+      const mindarThree = new MindARThree({
+        container: document.querySelector('#container'),
+        imageTargetSrc: target,
+        filterMinCF: 0.0001,
+        filterBeta: 0.001
+      });
+      const {renderer, scene, camera} = mindarThree;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+      const texture = new THREE.VideoTexture(video);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      const geometry = new THREE.PlaneGeometry(aspect, 1);
+      const material = new THREE.MeshBasicMaterial({map:texture, transparent:true, side:THREE.DoubleSide});
+      const plane = new THREE.Mesh(geometry, material);
+      const anchor = mindarThree.addAnchor(0);
+      anchor.group.add(plane);
+      plane.visible = !hideLost;
+
+      anchor.onTargetFound = async () => {
+        plane.visible = true;
+        say('Target found. Playing video.');
+        if(autoplay){ try{ await video.play(); }catch(e){ say('Target found, but video autoplay was blocked. Tap screen once.', true); } }
+      };
+      anchor.onTargetLost = () => {
+        say('Target lost. Scan the image again.');
+        if(hideLost) plane.visible = false;
+        if(hideLost) video.pause();
+      };
+
+      await mindarThree.start();
+      ui.style.display = 'none';
+      renderer.setAnimationLoop(() => renderer.render(scene,camera));
+      say('Camera running. Scan the target image.');
+
+      document.body.addEventListener('click', () => { if(autoplay) video.play().catch(()=>{}); }, {once:false});
+    }catch(e){
+      started = false;
+      console.error(e);
+      say(e.message || String(e), true);
+    }
+  }
+  document.getElementById('startBtn').addEventListener('click', start);
 </script>
 </body>
 </html>

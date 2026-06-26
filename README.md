@@ -1,30 +1,39 @@
-# Kivicube-style Image Target Video AR
+# Image Video AR
 
-Static WebAR app for this workflow:
+Static WebAR app for one job:
 
-1. Upload/choose a target image.
-2. Convert it in the browser to `target.mind`.
-3. Upload `target.mind` and your video to any host that gives direct HTTPS URLs.
-4. Generate a viewer link.
-5. Scan the image: the video appears on the image frame, autoplaying and looping.
+**Scan an image target → show a video exactly on top of that image → autoplay and loop.**
+
+No backend. No VR UI. No server code.
 
 ## Files
 
-- `index.html` — builder + target image to `.mind` converter.
-- `viewer.html` — AR camera viewer.
+- `index.html` — builder + image to `.mind` compiler + AR link generator
+- `viewer.html` — camera/image tracking viewer
 
-## Hosting
+## Workflow
 
-Upload both files to GitHub Pages, Netlify, or any HTTPS static host.
+1. Open `index.html` on HTTPS hosting.
+2. Upload your target image.
+3. Click **Compile .mind target**.
+4. Download `target.mind`.
+5. Upload `target.mind` to a host that gives a direct HTTPS URL with CORS.
+6. Upload your MP4 video to a host with a direct HTTPS URL.
+7. Paste both URLs in the builder.
+8. Keep **Autoplay** and **Loop** checked.
+9. Generate the viewer link.
+10. Open the viewer link on mobile, tap **Start camera**, allow camera, scan the image.
 
 ## Important
 
-- The app must run on HTTPS for camera access.
-- Video URL and `.mind` URL must be direct file URLs.
-- The host must allow CORS.
-- Mobile autoplay generally requires the video to be muted.
-- For perfect frame matching, export the video in the same aspect ratio as the scanned target image.
+The `.mind` target is not the same thing as a JPG/PNG. The target image must be compiled first.
 
-## Libraries
+Video should be MP4/H.264, muted for autoplay compatibility on mobile.
 
-Uses MindAR image tracking + A-Frame from CDN.
+GitHub Pages works for the app, but large video files are better hosted elsewhere.
+
+## Requirements
+
+- HTTPS is required for camera access.
+- Direct file URLs are required.
+- CORS must be enabled for `.mind` target files.
