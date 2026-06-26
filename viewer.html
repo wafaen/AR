@@ -2,49 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>AR Video Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Image Video AR Viewer</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <style>
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:Arial,Helvetica,sans-serif}.overlay{position:fixed;z-index:10;inset:0;display:flex;align-items:center;justify-content:center;background:#000c;color:#fff;text-align:center;padding:24px}.panel{max-width:420px}.btn{border:0;border-radius:999px;background:white;color:#111;padding:13px 20px;font:inherit;font-weight:700}.hint{position:fixed;z-index:8;left:0;right:0;bottom:18px;text-align:center;color:white;text-shadow:0 1px 8px #000;font-weight:700}.error{color:#ffb3b3;white-space:pre-wrap}</style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:system-ui,Arial,sans-serif}.overlay{position:fixed;z-index:10;left:0;right:0;bottom:0;padding:14px;background:linear-gradient(transparent,#000b);color:white;text-align:center}.btn{border:0;border-radius:999px;background:white;color:#111;font-weight:800;padding:12px 18px}.hidden{display:none}.error{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:white;background:#111;padding:20px;text-align:center;z-index:20;line-height:1.5}
+  </style>
 </head>
 <body>
-<div id="start" class="overlay"><div class="panel"><h1>Scan the image</h1><p>Tap start, allow camera, then point your phone at the target image.</p><p id="err" class="error"></p><button id="startBtn" class="btn">Start AR</button></div></div>
-<div class="hint">Point the camera at the poster/image</div>
+<div id="error" class="error hidden"></div>
+<div id="tap" class="overlay hidden"><button class="btn">Tap to start video</button><div style="font-size:13px;margin-top:8px">Some phones block autoplay unless muted.</div></div>
+<a-scene id="scene" embedded color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: true">
+  <a-assets timeout="30000"><video id="arVideo" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></video></a-assets>
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+  <a-entity id="anchor" mindar-image-target="targetIndex: 0">
+    <a-video id="videoPlane" src="#arVideo" position="0 0 0" rotation="0 0 0"></a-video>
+  </a-entity>
+</a-scene>
 <script>
-const params = new URLSearchParams(location.search);
-const target = params.get('target');
-const videoSrc = params.get('video');
-const ratio = parseFloat(params.get('ratio') || '1');
-const opacity = parseFloat(params.get('opacity') || '1');
-const err = document.getElementById('err');
-if(!target || !videoSrc){ err.textContent = 'Missing target or video URL. Build the link from index.html first.'; }
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-document.getElementById('startBtn').addEventListener('click', async ()=>{
-  if(!target || !videoSrc) return;
-  document.getElementById('start').style.display='none';
-  const scene = document.createElement('a-scene');
-  scene.setAttribute('mindar-image', `imageTargetSrc: ${target}; autoStart: true; uiScanning: yes; uiLoading: yes; filterMinCF:0.001; filterBeta:0.01`);
-  scene.setAttribute('color-space','sRGB');
-  scene.setAttribute('renderer','colorManagement: true, physicallyCorrectLights');
-  scene.setAttribute('vr-mode-ui','enabled: false');
-  scene.setAttribute('device-orientation-permission-ui','enabled: false');
-  scene.innerHTML = `
-    <a-assets timeout="30000">
-      <video id="arVideo" src="${esc(videoSrc)}" preload="auto" crossorigin="anonymous" playsinline webkit-playsinline muted loop></video>
-    </a-assets>
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-    <a-entity id="targetEntity" mindar-image-target="targetIndex: 0">
-      <a-video src="#arVideo" position="0 0 0.01" width="1" height="${ratio}" opacity="${opacity}" rotation="0 0 0"></a-video>
-    </a-entity>`;
-  document.body.appendChild(scene);
-  const video = document.getElementById('arVideo');
-  const entity = scene.querySelector('#targetEntity');
-  entity.addEventListener('targetFound', async ()=>{ try{ video.currentTime = 0; await video.play(); }catch(e){} });
-  entity.addEventListener('targetLost', ()=>{ video.pause(); });
-});
-window.addEventListener('error', e=>{ if(err) err.textContent = e.message || 'Error loading AR.'; });
+const p = new URLSearchParams(location.search);
+const target = p.get('target');
+const videoUrl = p.get('video');
+const width = Number(p.get('w') || 1);
+const height = Number(p.get('h') || 0.5625);
+const autoplay = p.get('autoplay') !== '0';
+const loop = p.get('loop') !== '0';
+const muted = p.get('muted') !== '0';
+const controls = p.get('controls') === '1';
+const fit = p.get('fit') || 'cover';
+const start = p.get('start') || 'target';
+const err = document.getElementById('error');
+function showError(msg){err.textContent=msg;err.classList.remove('hidden');}
+if(!target || !videoUrl){ showError('Missing target.mind or video URL. Generate the link from index.html first.'); }
+else{
+  const scene = document.getElementById('scene');
+  scene.setAttribute('mindar-image', `imageTargetSrc: ${target}; autoStart: true; uiScanning: yes; uiLoading: yes;`);
+  const v = document.getElementById('arVideo');
+  v.src = videoUrl; v.loop = loop; v.muted = muted; v.controls = controls; v.autoplay = autoplay; v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
+  const plane = document.getElementById('videoPlane');
+  plane.setAttribute('width', width); plane.setAttribute('height', height); plane.setAttribute('material', `shader: flat; transparent: true; side: double; ${fit==='contain'?'':'}`);
+  // A-Frame video fills the plane. For exact Kivicube-style matching, export the video in the same aspect ratio as the target image.
+  async function tryPlay(){ if(!autoplay) return; try{ await v.play(); document.getElementById('tap').classList.add('hidden'); }catch(e){ document.getElementById('tap').classList.remove('hidden'); } }
+  document.getElementById('tap').onclick=()=>tryPlay();
+  document.body.addEventListener('click',()=>tryPlay(),{once:true});
+  const anchor = document.getElementById('anchor');
+  anchor.addEventListener('targetFound', ()=>{ if(start==='target') { v.currentTime = 0; tryPlay(); } });
+  anchor.addEventListener('targetLost', ()=>{ if(start==='target') v.pause(); });
+  if(start==='load') window.addEventListener('load', tryPlay);
+}
 </script>
 </body>
 </html>

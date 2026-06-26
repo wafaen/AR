@@ -1,41 +1,30 @@
 # Kivicube-style Image Target Video AR
 
-Static WebAR app: no backend. It does one thing:
+Static WebAR app for this workflow:
 
-**Scan an image target → display a looping autoplay video exactly on the image frame.**
+1. Upload/choose a target image.
+2. Convert it in the browser to `target.mind`.
+3. Upload `target.mind` and your video to any host that gives direct HTTPS URLs.
+4. Generate a viewer link.
+5. Scan the image: the video appears on the image frame, autoplaying and looping.
 
 ## Files
 
-- `index.html` — builder + target compiler
-- `viewer.html` — mobile AR viewer
-
-## Workflow
-
-1. Open `index.html`.
-2. Upload the exact poster/image people will scan.
-3. Compile and download `target.mind`.
-4. Upload `target.mind` and your `video.mp4` to a public HTTPS host.
-5. Paste both direct URLs in the builder.
-6. Generate the viewer link.
-7. Open the viewer link on mobile and scan the image.
-
-## Important
-
-The target image must be converted into `.mind` format first. A normal JPG/PNG URL is not enough for MindAR image tracking.
-
-## Video settings
-
-Use MP4 H.264 if possible.
-The viewer sets the video to:
-
-- autoplay after tap/start
-- loop
-- muted
-- playsinline
-
-Mobile browsers require the first tap before camera/video playback.
+- `index.html` — builder + target image to `.mind` converter.
+- `viewer.html` — AR camera viewer.
 
 ## Hosting
 
-GitHub Pages works for the app.
-For assets, use direct HTTPS links that allow CORS. GitHub Releases direct download links usually work better than Google Drive/Mega.
+Upload both files to GitHub Pages, Netlify, or any HTTPS static host.
+
+## Important
+
+- The app must run on HTTPS for camera access.
+- Video URL and `.mind` URL must be direct file URLs.
+- The host must allow CORS.
+- Mobile autoplay generally requires the video to be muted.
+- For perfect frame matching, export the video in the same aspect ratio as the scanned target image.
+
+## Libraries
+
+Uses MindAR image tracking + A-Frame from CDN.
