@@ -2,138 +2,44 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Image Video AR Builder</title>
-  <style>
-    :root{font-family:Inter,system-ui,Arial,sans-serif;color:#f5f5f5;background:#111}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(135deg,#101010,#222);padding:24px}.wrap{max-width:980px;margin:auto}.card{background:#1b1b1b;border:1px solid #333;border-radius:18px;padding:20px;margin:16px 0;box-shadow:0 15px 40px #0005}h1{margin:0 0 8px;font-size:30px}h2{margin:0 0 14px;font-size:20px}.muted{color:#bdbdbd;line-height:1.5}label{display:block;margin:12px 0 6px;font-weight:700}input[type="url"],input[type="text"],input[type="number"]{width:100%;padding:12px;border-radius:12px;border:1px solid #444;background:#101010;color:#fff}input[type="file"]{width:100%;padding:12px;border:1px dashed #555;border-radius:12px;background:#111}.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}.checks{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px}.check{display:flex;gap:8px;align-items:center;background:#111;border:1px solid #333;padding:10px 12px;border-radius:999px}button,a.button{appearance:none;border:0;border-radius:14px;padding:12px 16px;background:#fff;color:#111;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block;margin-top:12px}button.secondary{background:#333;color:#fff}.status{white-space:pre-wrap;background:#0b0b0b;border:1px solid #333;border-radius:12px;padding:12px;min-height:46px;color:#d7ffd7}.danger{color:#ffb3b3}.preview{max-width:260px;max-height:180px;border-radius:12px;border:1px solid #444;margin-top:10px}code{background:#000;padding:2px 5px;border-radius:5px;color:#d7ffd7}.copybox{display:flex;gap:8px}.copybox input{flex:1}@media(max-width:720px){body{padding:12px}.row{grid-template-columns:1fr}}
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Image Target Video AR</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <script src="config.js"></script>
 </head>
 <body>
-<div class="wrap">
-  <h1>Image Video AR Builder</h1>
-  <p class="muted">Static workflow: compile a poster/image into a <code>.mind</code> target, host that file, paste its URL with your video URL, then generate an AR viewer link.</p>
+  <div id="startPanel" class="panel">
+    <h1>AR Video</h1>
+    <p>Tap start, allow camera, then scan your image target.</p>
+    <button id="startButton">Start camera</button>
+    <p id="status">Waiting…</p>
+  </div>
 
-  <section class="card">
-    <h2>1. Convert target image to .mind</h2>
-    <p class="muted">Choose a clear image target. Max file size here is <b>25 MB</b>. The compiler runs in your browser, so large files can take time.</p>
-    <input id="targetImage" type="file" accept="image/png,image/jpeg,image/webp" />
-    <img id="preview" class="preview" hidden alt="target preview" />
-    <div class="row">
-      <div><label>Detected image width</label><input id="imgW" type="number" readonly></div>
-      <div><label>Detected image height</label><input id="imgH" type="number" readonly></div>
-    </div>
-    <button id="compileBtn">Compile .mind target</button>
-    <a id="downloadMind" class="button" hidden download="target.mind">Download target.mind</a>
-    <pre id="compileStatus" class="status">Waiting for image…</pre>
-  </section>
+  <div id="hint" class="hint hidden">Scan the printed image</div>
 
-  <section class="card">
-    <h2>2. Create viewer link</h2>
-    <p class="muted">Upload <code>target.mind</code> somewhere with a direct HTTPS link, then paste it below. Video must also be a direct HTTPS URL, preferably MP4/H.264.</p>
-    <label>.mind target URL</label>
-    <input id="mindUrl" type="url" placeholder="https://example.com/target.mind" />
-    <label>Video URL</label>
-    <input id="videoUrl" type="url" placeholder="https://example.com/video.mp4" />
-    <div class="checks">
-      <label class="check"><input id="autoplay" type="checkbox" checked /> Autoplay</label>
-      <label class="check"><input id="loop" type="checkbox" checked /> Loop</label>
-      <label class="check"><input id="muted" type="checkbox" checked /> Muted</label>
-      <label class="check"><input id="hideLost" type="checkbox" checked /> Hide when target lost</label>
-    </div>
-    <button id="makeLink">Generate AR link</button>
-    <div class="copybox"><input id="resultLink" readonly placeholder="Your AR link appears here" /><button id="copyLink" class="secondary">Copy</button></div>
-    <a id="openLink" class="button" hidden target="_blank">Open viewer</a>
-    <pre id="linkStatus" class="status">No viewer link yet.</pre>
-  </section>
-</div>
+  <a-scene
+    id="scene"
+    mindar-image="imageTargetSrc: assets/targets.mind; autoStart: false; uiScanning: yes; uiLoading: yes; uiError: yes; filterMinCF: 0.0001; filterBeta: 0.001"
+    embedded
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    renderer="colorManagement: true; alpha: true; antialias: true"
+    loading-screen="enabled: false">
 
-<script type="module">
-  import { Compiler } from 'https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/src/image-target/compiler.js';
+    <a-assets timeout="30000">
+      <video id="arVideo" src="assets/video.mp4" preload="auto" playsinline webkit-playsinline muted autoplay loop crossorigin="anonymous"></video>
+    </a-assets>
 
-  const $ = (id) => document.getElementById(id);
-  const fileInput = $('targetImage');
-  const preview = $('preview');
-  const status = $('compileStatus');
-  const downloadMind = $('downloadMind');
-  let selectedImage = null;
-  let imageAspect = 1;
+    <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse"></a-camera>
 
-  function setStatus(msg, bad=false){ status.textContent = msg; status.className = bad ? 'status danger' : 'status'; }
+    <a-entity id="target" mindar-image-target="targetIndex: 0">
+      <a-video id="videoPlane" src="#arVideo" position="0 0 0" rotation="0 0 0" width="1" height="1"></a-video>
+    </a-entity>
+  </a-scene>
 
-  function loadImage(file){
-    return new Promise((resolve,reject)=>{
-      if(file.size > 25 * 1024 * 1024) return reject(new Error('Image is bigger than 25 MB.'));
-      const url = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not load image. Try JPG or PNG.')); };
-      img.src = url;
-    });
-  }
-
-  fileInput.addEventListener('change', async () => {
-    downloadMind.hidden = true;
-    const file = fileInput.files?.[0];
-    if(!file){ setStatus('Waiting for image…'); return; }
-    try{
-      selectedImage = await loadImage(file);
-      imageAspect = selectedImage.naturalWidth / selectedImage.naturalHeight;
-      $('imgW').value = selectedImage.naturalWidth;
-      $('imgH').value = selectedImage.naturalHeight;
-      preview.src = URL.createObjectURL(file);
-      preview.hidden = false;
-      setStatus(`Loaded image: ${selectedImage.naturalWidth} × ${selectedImage.naturalHeight}\nReady to compile.`);
-    }catch(e){ selectedImage = null; setStatus(e.message, true); }
-  });
-
-  $('compileBtn').addEventListener('click', async () => {
-    if(!selectedImage){ setStatus('Choose a target image first.', true); return; }
-    try{
-      setStatus('Compiling… keep this tab open.');
-      const compiler = new Compiler();
-      await compiler.compileImageTargets([selectedImage], (progress) => {
-        setStatus(`Compiling target… ${progress.toFixed(1)}%`);
-      });
-      const buffer = await compiler.exportData();
-      const blob = new Blob([buffer], {type:'application/octet-stream'});
-      const url = URL.createObjectURL(blob);
-      downloadMind.href = url;
-      downloadMind.hidden = false;
-      setStatus('Done. Download target.mind, upload it to your host, then paste its direct URL below.');
-    }catch(e){
-      console.error(e);
-      setStatus('Compiler failed: ' + (e?.message || e) + '\nTry a clearer/smaller JPG if the browser runs out of memory.', true);
-    }
-  });
-
-  $('makeLink').addEventListener('click', () => {
-    const mind = $('mindUrl').value.trim();
-    const video = $('videoUrl').value.trim();
-    if(!mind || !video){ $('linkStatus').textContent = 'Paste both .mind URL and video URL.'; return; }
-    const w = Number($('imgW').value) || 1;
-    const h = Number($('imgH').value) || 1;
-    const params = new URLSearchParams({
-      target: mind,
-      video: video,
-      aspect: String(w/h),
-      autoplay: $('autoplay').checked ? '1':'0',
-      loop: $('loop').checked ? '1':'0',
-      muted: $('muted').checked ? '1':'0',
-      hideLost: $('hideLost').checked ? '1':'0'
-    });
-    const link = new URL('viewer.html', location.href);
-    link.search = params.toString();
-    $('resultLink').value = link.href;
-    $('openLink').href = link.href;
-    $('openLink').hidden = false;
-    $('linkStatus').textContent = 'Viewer link ready. Open it on a phone through HTTPS.';
-  });
-
-  $('copyLink').addEventListener('click', async () => {
-    if(!$('resultLink').value) return;
-    await navigator.clipboard.writeText($('resultLink').value);
-    $('linkStatus').textContent = 'Copied.';
-  });
-</script>
+  <script src="app.js"></script>
 </body>
 </html>
