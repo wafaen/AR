@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111111" />
+  <title>AR Video Builder</title>
+  <link rel="stylesheet" href="app/styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Free static WebAR tool</p>
+        <h1>Image target → looping video AR</h1>
+        <p class="sub">Create unlimited projects locally, compile image targets, add a video, then export a ready-to-upload folder.</p>
+      </div>
+      <div class="status-card">
+        <strong>Workflow</strong>
+        <span>1. Add poster/image</span>
+        <span>2. Add video</span>
+        <span>3. Compile target</span>
+        <span>4. Export project ZIP</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Projects</h2>
+        <button id="newProjectBtn" class="primary">+ New project</button>
+      </div>
+      <div id="projectList" class="project-list"></div>
+    </section>
+
+    <section id="editor" class="panel hidden">
+      <div class="panel-head wrap">
+        <div>
+          <label class="small-label" for="projectName">Project name</label>
+          <input id="projectName" class="text-input" maxlength="60" />
+        </div>
+        <div class="actions">
+          <button id="saveBtn">Save</button>
+          <button id="deleteBtn" class="danger">Delete</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h3>1. Target image</h3>
+          <p>Use the exact poster/image people will scan. JPG or PNG recommended.</p>
+          <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" />
+          <img id="targetPreview" class="preview hidden" alt="Target preview" />
+          <button id="compileBtn" class="primary wide">Compile .mind target</button>
+          <p id="compileStatus" class="note">Not compiled yet.</p>
+        </div>
+
+        <div class="card">
+          <h3>2. Video</h3>
+          <p>MP4/H.264 is safest for phones. It will autoplay muted and loop.</p>
+          <input id="videoInput" type="file" accept="video/mp4,video/webm,video/quicktime" />
+          <video id="videoPreview" class="preview hidden" muted loop playsinline controls></video>
+          <label class="check"><input id="autoPlay" type="checkbox" checked /> Autoplay immediately</label>
+          <label class="check"><input id="loopVideo" type="checkbox" checked /> Loop video forever</label>
+        </div>
+
+        <div class="card">
+          <h3>3. Fit on image</h3>
+          <p>Default is exact full-frame overlay. Change only if needed.</p>
+          <label>X position <input id="posX" type="range" min="-1" max="1" step="0.01" value="0" /></label>
+          <label>Y position <input id="posY" type="range" min="-1" max="1" step="0.01" value="0" /></label>
+          <label>Width <input id="width" type="range" min="0.1" max="2" step="0.01" value="1" /></label>
+          <label>Height <input id="height" type="range" min="0.1" max="2" step="0.01" value="1" /></label>
+          <button id="resetFitBtn">Reset full frame</button>
+        </div>
+
+        <div class="card">
+          <h3>4. Export</h3>
+          <p>Exports a standalone project with <b>index.html</b>, target file, and video.</p>
+          <button id="exportBtn" class="primary wide">Export AR project ZIP</button>
+          <button id="exportAllBtn" class="wide">Export all saved projects</button>
+          <p class="note">Upload the exported folder to Netlify, Vercel, GitHub Pages, or any HTTPS host.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel help">
+      <h2>Phone rules</h2>
+      <p>Open the exported project from HTTPS. Allow camera access. Tap once if the browser blocks autoplay. Use a high-detail target image, not a flat/blank poster.</p>
+    </section>
+  </main>
+
+  <template id="projectItemTpl">
+    <button class="project-item">
+      <span class="project-title"></span>
+      <small class="project-meta"></small>
+    </button>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script type="module" src="app/main.js"></script>
+</body>
+</html>
