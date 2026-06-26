@@ -3,69 +3,48 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>No-Server WebAR Builder</title>
+  <title>Kivicube-style Static WebAR Video Builder</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="wrap">
     <section class="hero">
-      <p class="eyebrow">Static WebAR · Image Target</p>
-      <h1>No-server AR link builder</h1>
-      <p class="lead">Paste direct URLs for your compiled <code>.mind</code> target and AR asset. This page generates a viewer link you can put behind a QR code.</p>
-      <div class="notice">
-        Works best when files are hosted on GitHub Pages, Netlify, Cloudinary, Firebase Storage, or any host that allows direct HTTPS + CORS.
-      </div>
+      <p class="eyebrow">Static WebAR · Image target video overlay</p>
+      <h1>AR poster video builder</h1>
+      <p class="lead">Paste a compiled MindAR image target and a direct MP4 URL. The viewer places the video exactly over the scanned image frame, with autoplay, mute, loop, and pause when the image is lost.</p>
+      <div class="notice">This is fully static: upload these files to GitHub Pages/Netlify. Your <code>.mind</code> and <code>.mp4</code> links must be direct HTTPS links with CORS allowed.</div>
     </section>
 
     <section class="card">
-      <label>Compiled target file URL <span>.mind</span></label>
+      <label>Compiled image target URL <span>.mind</span></label>
       <input id="targetUrl" placeholder="https://.../targets.mind" />
-      <p class="hint">Create this file with the MindAR Image Target Compiler, then host it online.</p>
+      <p class="hint">Your poster/image must first be compiled using the MindAR Image Target Compiler.</p>
 
-      <label>AR asset URL <span>image, video, or 3D model</span></label>
-      <input id="assetUrl" placeholder="https://.../overlay.mp4 or image.png or model.glb" />
-
-      <div class="grid">
-        <div>
-          <label>Asset type</label>
-          <select id="assetType">
-            <option value="video">Video MP4</option>
-            <option value="image">Image PNG/JPG/WebP</option>
-            <option value="model">3D model GLB/GLTF</option>
-          </select>
-        </div>
-        <div>
-          <label>Width</label>
-          <input id="width" type="number" min="0.1" step="0.1" value="1" />
-        </div>
-        <div>
-          <label>Height</label>
-          <input id="height" type="number" min="0.1" step="0.1" value="0.65" />
-        </div>
-      </div>
+      <label>Video URL <span>direct .mp4 link</span></label>
+      <input id="videoUrl" placeholder="https://.../video.mp4" />
 
       <div class="grid">
         <div>
-          <label>X position</label>
-          <input id="x" type="number" step="0.05" value="0" />
+          <label>Target image width</label>
+          <input id="targetW" type="number" min="1" step="1" value="1080" />
         </div>
         <div>
-          <label>Y position</label>
-          <input id="y" type="number" step="0.05" value="0" />
+          <label>Target image height</label>
+          <input id="targetH" type="number" min="1" step="1" value="1080" />
         </div>
         <div>
-          <label>Z position</label>
-          <input id="z" type="number" step="0.05" value="0" />
+          <label>Scale</label>
+          <input id="scale" type="number" min="0.1" step="0.01" value="1" />
         </div>
       </div>
 
       <div class="grid two">
-        <label class="check"><input id="transparent" type="checkbox" checked /> Transparent video/image plane</label>
-        <label class="check"><input id="sound" type="checkbox" /> Try video sound after tap</label>
+        <label class="check"><input id="muted" type="checkbox" checked /> Muted autoplay</label>
+        <label class="check"><input id="pauseLost" type="checkbox" checked /> Pause when target is lost</label>
       </div>
 
-      <button id="makeLink">Create AR link</button>
-      <textarea id="result" readonly placeholder="Your AR link appears here"></textarea>
+      <button id="makeLink">Create AR viewer link</button>
+      <textarea id="result" readonly placeholder="Your Kivicube-style AR link appears here"></textarea>
       <div class="actions">
         <a id="openLink" class="button ghost" href="#" target="_blank" rel="noopener">Open viewer</a>
         <button id="copyLink" class="ghost">Copy link</button>
@@ -73,12 +52,12 @@
     </section>
 
     <section class="card small">
-      <h2>Workflow</h2>
+      <h2>How it works</h2>
       <ol>
-        <li>Choose a high-detail poster/image as your AR marker.</li>
-        <li>Compile it into <code>targets.mind</code> using MindAR Image Target Compiler.</li>
-        <li>Host <code>targets.mind</code> and your AR asset online as direct HTTPS links.</li>
-        <li>Paste links here, generate the viewer URL, then create a QR code from it.</li>
+        <li>Use your poster/image as the image target.</li>
+        <li>Compile it to <code>targets.mind</code>.</li>
+        <li>Host <code>targets.mind</code> and the video online.</li>
+        <li>Generate the link and put that link behind your QR code.</li>
       </ol>
     </section>
   </main>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <title>WebAR Viewer</title>
+  <title>AR Video Viewer</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
@@ -11,11 +11,11 @@
 <body class="viewerBody">
   <div id="startPanel" class="startPanel">
     <h1>AR Experience</h1>
-    <p>Allow camera access, point your phone at the poster/image, and wait a few seconds.</p>
+    <p>Allow camera access, scan the image, and wait until the video locks onto the frame.</p>
     <button id="startBtn">Start AR</button>
     <p id="error" class="error"></p>
   </div>
-
+  <div id="scanHint" class="scanHint hidden">Point camera at the image</div>
   <script src="viewer.js"></script>
 </body>
 </html>

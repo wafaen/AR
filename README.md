@@ -1,33 +1,39 @@
-# No-Server WebAR Builder
+# Kivicube-style Static WebAR Video Overlay
 
-A static WebAR app for image-target AR. It needs no backend/server code. Host these files on GitHub Pages, Netlify, Vercel static hosting, or any HTTPS static host.
+A no-server WebAR app for the classic AR poster workflow:
 
-## What it does
+- scan an image target
+- display an MP4 video exactly on top of the scanned image frame
+- autoplay + loop
+- pause when the image is lost
+- hosted as plain static files on GitHub Pages, Netlify, etc.
 
-- `index.html` is the builder.
-- `viewer.html` is the AR experience.
-- Assets are loaded from external direct HTTPS URLs.
-- Supports image overlays, MP4 video overlays, and GLB/GLTF 3D models.
+## Files
+
+- `index.html` — builder page
+- `viewer.html` — AR viewer page
+- `builder.js` — creates viewer links
+- `viewer.js` — MindAR/A-Frame video overlay logic
+- `style.css` — UI styles
 
 ## Workflow
 
-1. Prepare your poster/image marker.
-2. Compile it to `targets.mind` using the MindAR Image Target Compiler.
-3. Host `targets.mind` online.
-4. Host your overlay asset online: PNG/JPG/WebP, MP4, or GLB.
-5. Open `index.html`, paste both URLs, and generate an AR viewer link.
-6. Turn the viewer link into a QR code.
+1. Prepare your poster/image target.
+2. Compile it into a `.mind` file using the MindAR Image Target Compiler.
+3. Host the `.mind` file and your `.mp4` video online.
+4. Open `index.html`, paste both direct URLs, and generate the viewer link.
+5. Put the viewer link behind a QR code.
 
-## Important limits
+## Important hosting rules
 
-- Camera access requires HTTPS, except on localhost.
-- External asset links must be direct file links, not Google Drive preview pages.
-- The file host should allow CORS. GitHub Pages, Netlify, Firebase Storage, Cloudinary, and many CDNs usually work.
-- iPhone often blocks video with sound until the user taps. This template starts AR after a tap and uses muted video by default for reliability.
-- This is image-target AR, not full world tracking like 8th Wall.
+Your files must be loaded from:
 
-## Best asset formats
+- HTTPS URLs
+- direct file links, not preview pages
+- hosts that allow CORS
 
-- Transparent video: WebM with alpha works in many browsers, but iPhone support is weak. For universal mobile use, use MP4 with normal rectangular video or PNG sequences/GIF-style animation alternatives.
-- Normal video: MP4 H.264 is safest.
-- 3D: GLB with compressed textures.
+For the video, use MP4/H.264 for the best mobile compatibility.
+
+## Notes
+
+Mobile browsers usually require one user tap before video playback. This app uses a Start AR button to satisfy that rule, then the video plays automatically when the target is detected.

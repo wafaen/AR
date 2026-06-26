@@ -1,35 +1,29 @@
 const $ = (id) => document.getElementById(id);
 
-function makeUrl() {
-  const params = new URLSearchParams({
-    target: $('targetUrl').value.trim(),
-    asset: $('assetUrl').value.trim(),
-    type: $('assetType').value,
-    w: $('width').value || '1',
-    h: $('height').value || '0.65',
-    x: $('x').value || '0',
-    y: $('y').value || '0',
-    z: $('z').value || '0',
-    transparent: $('transparent').checked ? '1' : '0',
-    sound: $('sound').checked ? '1' : '0'
-  });
-  const base = new URL('viewer.html', location.href).href;
-  return `${base}?${params.toString()}`;
-}
+function makeViewerLink() {
+  const target = $('targetUrl').value.trim();
+  const video = $('videoUrl').value.trim();
+  const targetW = Number($('targetW').value || 1080);
+  const targetH = Number($('targetH').value || 1080);
+  const scale = Number($('scale').value || 1);
+  const muted = $('muted').checked ? '1' : '0';
+  const pauseLost = $('pauseLost').checked ? '1' : '0';
 
-$('makeLink').addEventListener('click', () => {
-  if (!$('targetUrl').value.trim() || !$('assetUrl').value.trim()) {
-    alert('Please add both the .mind target URL and the AR asset URL.');
+  if (!target || !video) {
+    alert('Paste both the .mind target URL and the MP4 video URL.');
     return;
   }
-  const url = makeUrl();
-  $('result').value = url;
-  $('openLink').href = url;
-});
 
+  const params = new URLSearchParams({ target, video, w: targetW, h: targetH, scale, muted, pauseLost });
+  const link = `${location.origin}${location.pathname.replace(/index\.html$/, '')}viewer.html?${params.toString()}`;
+  $('result').value = link;
+  $('openLink').href = link;
+}
+
+$('makeLink').addEventListener('click', makeViewerLink);
 $('copyLink').addEventListener('click', async () => {
-  const url = $('result').value || makeUrl();
-  await navigator.clipboard.writeText(url);
-  $('copyLink').textContent = 'Copied';
+  if (!$('result').value) makeViewerLink();
+  try { await navigator.clipboard.writeText($('result').value); $('copyLink').textContent = 'Copied'; }
+  catch { $('result').select(); document.execCommand('copy'); }
   setTimeout(() => $('copyLink').textContent = 'Copy link', 1200);
 });
