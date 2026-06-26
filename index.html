@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>No-Server WebAR Builder</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <p class="eyebrow">Static WebAR · Image Target</p>
+      <h1>No-server AR link builder</h1>
+      <p class="lead">Paste direct URLs for your compiled <code>.mind</code> target and AR asset. This page generates a viewer link you can put behind a QR code.</p>
+      <div class="notice">
+        Works best when files are hosted on GitHub Pages, Netlify, Cloudinary, Firebase Storage, or any host that allows direct HTTPS + CORS.
+      </div>
+    </section>
+
+    <section class="card">
+      <label>Compiled target file URL <span>.mind</span></label>
+      <input id="targetUrl" placeholder="https://.../targets.mind" />
+      <p class="hint">Create this file with the MindAR Image Target Compiler, then host it online.</p>
+
+      <label>AR asset URL <span>image, video, or 3D model</span></label>
+      <input id="assetUrl" placeholder="https://.../overlay.mp4 or image.png or model.glb" />
+
+      <div class="grid">
+        <div>
+          <label>Asset type</label>
+          <select id="assetType">
+            <option value="video">Video MP4</option>
+            <option value="image">Image PNG/JPG/WebP</option>
+            <option value="model">3D model GLB/GLTF</option>
+          </select>
+        </div>
+        <div>
+          <label>Width</label>
+          <input id="width" type="number" min="0.1" step="0.1" value="1" />
+        </div>
+        <div>
+          <label>Height</label>
+          <input id="height" type="number" min="0.1" step="0.1" value="0.65" />
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label>X position</label>
+          <input id="x" type="number" step="0.05" value="0" />
+        </div>
+        <div>
+          <label>Y position</label>
+          <input id="y" type="number" step="0.05" value="0" />
+        </div>
+        <div>
+          <label>Z position</label>
+          <input id="z" type="number" step="0.05" value="0" />
+        </div>
+      </div>
+
+      <div class="grid two">
+        <label class="check"><input id="transparent" type="checkbox" checked /> Transparent video/image plane</label>
+        <label class="check"><input id="sound" type="checkbox" /> Try video sound after tap</label>
+      </div>
+
+      <button id="makeLink">Create AR link</button>
+      <textarea id="result" readonly placeholder="Your AR link appears here"></textarea>
+      <div class="actions">
+        <a id="openLink" class="button ghost" href="#" target="_blank" rel="noopener">Open viewer</a>
+        <button id="copyLink" class="ghost">Copy link</button>
+      </div>
+    </section>
+
+    <section class="card small">
+      <h2>Workflow</h2>
+      <ol>
+        <li>Choose a high-detail poster/image as your AR marker.</li>
+        <li>Compile it into <code>targets.mind</code> using MindAR Image Target Compiler.</li>
+        <li>Host <code>targets.mind</code> and your AR asset online as direct HTTPS links.</li>
+        <li>Paste links here, generate the viewer URL, then create a QR code from it.</li>
+      </ol>
+    </section>
+  </main>
+  <script src="builder.js"></script>
+</body>
+</html>
